@@ -1,29 +1,58 @@
 import throttle from 'lodash.throttle';
 
+const inputEl = document.querySelector('input');
+const messageEl = document.querySelector('textarea');
 const form = document.querySelector('.feedback-form');
-form.addEventListener('input', throttle(onFormData, 500));
-form.addEventListener('submit', onSubmitForm);
+const FORM_STATE = 'feedback-form-state';
 
-const formData = {};
+let formData = {
+  email: '',
+  message: '',
+};
 
-function onFormData(e) {
-  formData[e.target.name] = e.target.value;
-  localStorage.setItem('feedback-form-state', JSON.stringify(formData));
-}
+updateForm();
 
-function onSubmitForm(e) {
-  console.log(JSON.parse(localStorage.getItem('feedback-form-state')));
-  e.preventDefault();
-  e.currentTarget.reset();
-  localStorage.removeItem('feedback-form-state');
-}
+inputEl.addEventListener(
+  'input',
+  throttle(() => {
+    formData.email = inputEl.value;
+    localStorage.setItem(FORM_STATE, JSON.stringify(formData));
+  }, 500)
+);
 
-(function dataFromLocalStorage() {
-  const data = JSON.parse(localStorage.getItem('feedback-form-state'));
-  const email = document.querySelector('.feedback-form input');
-  const message = document.querySelector('.feedback-form textarea');
-  if (data) {
-    email.value = data.email;
-    message.value = data.message;
+messageEl.addEventListener(
+  'input',
+  throttle(() => {
+    formData.message = messageEl.value;
+    localStorage.setItem(FORM_STATE, JSON.stringify(formData));
+  }, 500)
+);
+
+form.addEventListener('submit', handleSubmit);
+
+function updateForm() {
+  if (localStorage.getItem(FORM_STATE)) {
+    formData.email = JSON.parse(localStorage.getItem(FORM_STATE)).email;
+    formData.message = JSON.parse(localStorage.getItem(FORM_STATE)).message;
+    inputEl.value = formData.email;
+    messageEl.value = formData.message;
+  } else {
+    return;
   }
-})();
+}
+
+function handleSubmit(event) {
+  event.preventDefault();
+
+  if (inputEl.value && messageEl.value) {
+    console.log(formData);
+    localStorage.clear();
+    event.currentTarget.reset();
+    formData = {
+      email: '',
+      message: '',
+    };
+  } else {
+    alert('Please make sure all fields are filled!');
+  }
+}
