@@ -1,58 +1,38 @@
 import throttle from 'lodash.throttle';
 
-const inputEl = document.querySelector('input');
-const messageEl = document.querySelector('textarea');
-const form = document.querySelector('.feedback-form');
 const FORM_STATE = 'feedback-form-state';
-
 let formData = {
   email: '',
   message: '',
 };
 
+const formEl = document.querySelector('.feedback-form');
+
+formEl.addEventListener('submit', onFormSubmit);
+formEl.addEventListener('input', throttle(onTextareaInput, 500));
+
 updateForm();
 
-inputEl.addEventListener(
-  'input',
-  throttle(() => {
-    formData.email = inputEl.value;
-    localStorage.setItem(FORM_STATE, JSON.stringify(formData));
-  }, 500)
-);
-
-messageEl.addEventListener(
-  'input',
-  throttle(() => {
-    formData.message = messageEl.value;
-    localStorage.setItem(FORM_STATE, JSON.stringify(formData));
-  }, 500)
-);
-
-form.addEventListener('submit', handleSubmit);
-
-function updateForm() {
-  if (localStorage.getItem(FORM_STATE)) {
-    formData.email = JSON.parse(localStorage.getItem(FORM_STATE)).email;
-    formData.message = JSON.parse(localStorage.getItem(FORM_STATE)).message;
-    inputEl.value = formData.email;
-    messageEl.value = formData.message;
-  } else {
-    return;
+function onFormSubmit(e) {
+  if (formEl.email.value === '' || formEl.message.value === '') {
+    return alert('Please make sure all fields are filled!');
   }
+  console.log(localStorage.getItem(FORM_STATE));
+  e.preventDefault();
+  e.currentTarget.reset();
+  localStorage.removeItem(FORM_STATE);
 }
 
-function handleSubmit(event) {
-  event.preventDefault();
+function onTextareaInput(e) {
+  formData[e.target.name] = e.target.value;
+  const inputedValue = JSON.stringify(formData);
+  localStorage.setItem(FORM_STATE, inputedValue);
+}
 
-  if (inputEl.value && messageEl.value) {
-    console.log(formData);
-    localStorage.clear();
-    event.currentTarget.reset();
-    formData = {
-      email: '',
-      message: '',
-    };
-  } else {
-    alert('Please make sure all fields are filled!');
+function updateForm() {
+  const savedValue = JSON.parse(localStorage.getItem(FORM_STATE));
+  if (savedValue) {
+    formEl.email.value = savedValue.email;
+    formEl.message.value = savedValue.message;
   }
 }
